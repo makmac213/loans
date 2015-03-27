@@ -1,0 +1,65 @@
+{% load staticfiles i18n %}
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Loans PH</title>
+	<style>
+		@import url(//fonts.googleapis.com/css?family=Lato:700);
+
+		body {
+			margin:0;
+			font-family:'Lato', sans-serif;
+			text-align:center;
+			color: #999;
+		}
+
+		.welcome {
+			width: 300px;
+			height: 200px;
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			margin-left: -150px;
+			margin-top: -100px;
+		}
+
+		a, a:visited {
+			text-decoration:none;
+		}
+
+		h1 {
+			font-size: 32px;
+			margin: 16px 0 0 0;
+		}
+	</style>
+</head>
+<body>
+	<script>
+	  window.fbAsyncInit = function() {
+	    FB.init({
+	      appId      : '1578073239108678',
+	      xfbml      : true,
+	      version    : 'v2.3'
+	    });
+	  };
+
+	  (function(d, s, id){
+	     var js, fjs = d.getElementsByTagName(s)[0];
+	     if (d.getElementById(id)) {return;}
+	     js = d.createElement(s); js.id = id;
+	     js.src = "//connect.facebook.net/en_US/sdk.js";
+	     fjs.parentNode.insertBefore(js, fjs);
+	   }(document, 'script', 'facebook-jssdk'));
+	</script>
+
+	<div class="welcome">
+		<a href="{% url "social:begin" backend="facebook" %}" title="Connect to Facebook">
+            <img src="{% static 'web/images/fblogin.png' %}" alt="Facebook login">
+        </a>
+	</div>
+
+	{{ user }} {{ user.id }} {{ user.uid }} {{ friends }}
+
+</body>
+</html>
