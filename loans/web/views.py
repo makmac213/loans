@@ -1,4 +1,4 @@
-import json, time, os, string, requests
+import json, time, os, string, requests, logging
 from datetime import datetime, timedelta
 from copy import deepcopy
 from decimal import Decimal
@@ -35,6 +35,7 @@ from django.views.generic.base import View
 from django.views.generic import (FormView, TemplateView, DetailView, 
                                     ListView, UpdateView)
 
+logger = logging.getLogger(__name__)
 
 class FrontendView(object):
 
@@ -47,15 +48,18 @@ class FrontendView(object):
             if user:
                 # friends list
                 # TODO: move graph url to settings
-                """
-                url = 'https://graph.facebook.com/me/' % (user.uid)
+                
+                url = 'https://graph.facebook.com/%s/' % (user.uid)
                 url += 'friends?fields=id,name,location,picture'
                 url += '&access_token=%s' % (user.extra_data.get('access_token'))
+                print url
                 """
-                
                 url = 'https://graph.facebook.com/v2.3/me/friends?' \
                         'access_token=%s' % (user.extra_data.get('access_token'))
+                """
+
                 r = requests.get(url)
+
                 if r.status_code == 200:                    
                     friends = r.json()              
 
@@ -66,3 +70,26 @@ class FrontendView(object):
             return render(request, self.template_name, context)
 
     #class Info
+
+
+class FacebookView(View):
+
+    class NewAssociation(View):
+
+        def get(self, request, *args, **kwargs):
+            social_user = request.user.social_auth.filter(provider="facebook")[0]
+
+            photos = None
+            if social_user:
+                # photo list
+                # TODO: move graph url to settings
+                url = 'https://graph.facebook.com/v2.3/me/'
+                url += 'photos/?access_token=%s' % (social_user.access_token)
+
+                r = requests.get(url)
+
+                if r.status_code == 200:                    
+                    photos = r.json()
+                logger.info(photos)
+
+            return HttpResponse('get')

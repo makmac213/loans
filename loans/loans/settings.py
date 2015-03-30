@@ -142,6 +142,7 @@ INSTALLED_APPS = (
     # 'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
+    'profiles',
     'web',
 
     #
@@ -164,12 +165,26 @@ LOGGING = {
             '()': 'django.utils.log.RequireDebugFalse'
         }
     },
+    'formatters': {
+        'standard': {
+            'format' : "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+            'datefmt' : "%d/%b/%Y %H:%M:%S"
+        },
+    },
     'handlers': {
         'mail_admins': {
             'level': 'ERROR',
             'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler'
-        }
+        },
+        'info': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': BASE_DIR + "/logs/debug.log",
+
+            'backupCount': 2,
+            'formatter': 'standard',
+        },
     },
     'loggers': {
         'django.request': {
@@ -177,12 +192,16 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': True,
         },
+        '': {
+            'handlers': ['info'],
+            'level': 'INFO',
+        },
     }
 }
 
 MODULES_NON_REL = []
 
-#AUTH_PROFILE_MODULE = 'django_facebook.FacebookProfile'
+AUTH_PROFILE_MODULE = 'profiles.Profile'
 
 try:
     from localsettings import *
