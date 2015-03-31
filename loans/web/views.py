@@ -35,6 +35,9 @@ from django.views.generic.base import View
 from django.views.generic import (FormView, TemplateView, DetailView, 
                                     ListView, UpdateView)
 
+# questions
+from questions.models import Question
+
 logger = logging.getLogger(__name__)
 
 class FrontendView(object):
@@ -43,7 +46,10 @@ class FrontendView(object):
         template_name = 'web/index.html'
 
         def get(self, request, *args, **kwargs):
-            user = request.user.social_auth.filter(provider="facebook")[0]
+            try:
+                user = request.user.social_auth.filter(provider="facebook")[0]
+            except:
+                user = None
             friends = None
             if user:
                 # friends list
@@ -69,7 +75,48 @@ class FrontendView(object):
             }
             return render(request, self.template_name, context)
 
-    #class Info
+    
+    class Questions(View):
+        template_name = 'web/questions.html'
+
+        def get(self, request, *args, **kwargs):
+            questions = Question.objects.filter(is_active=True, 
+                                                is_deleted=False)
+            context = {
+                'questions': questions,
+            }
+            return render(request, self.template_name, context)
+
+        def post(self, request, *args, **kwargs):
+
+            # get uid
+            try:
+                social_user = request.user.social_auth.filter(
+                                                    provider="facebook")[0]
+            except:
+                social_user = None
+
+            # get answers
+            answers = []
+            for k, v in request.POST.iteritems():
+                if 'qid' in k:
+                    answer = {}
+                    qid = k.split('-')[1]
+                    question = Question.objects.get(id=int(qid))
+                    answer['question_id'] = qid
+                    answer['answer'] = v
+                    answer['question_text'] = question.text
+                    answers.append(answer)
+
+            answers_json = json.dumps(answers)
+            logger.info(answers_json)
+
+            questions = Question.objects.filter(is_active=True, 
+                                                is_deleted=False)
+            context = {
+                'questions': questions,
+            }
+            return render(request, self.template_name, context)
 
 
 class FacebookView(View):
@@ -92,4 +139,4 @@ class FacebookView(View):
                     photos = r.json()
                 logger.info(photos)
 
-            return HttpResponse('get')
+            return redirect('questions')

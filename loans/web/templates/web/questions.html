@@ -1,0 +1,49 @@
+<html>
+
+
+<head>
+
+</head>
+
+<body>
+    <form action="{% url 'questions' %}" method="POST">
+        {% csrf_token %}
+        <ul>
+            {% for question in questions %}
+                <li>
+                    {{ question.text}} 
+                    {% if question.question_type == question.TYPE_PLAIN_TEXT %}
+                        <input type="text" id="qid-{{ question.id }}" name="qid-{{ question.id }}" class="{% if question.is_ignored %}inspectletIgnore{% endif %} {% if question.is_sensitive %}inspectlet-sensitive{% endif %}" />
+                    {% endif %}
+                    {% if question.question_type == question.TYPE_TEXT_FIELD %}
+                        <textarea id="qid-{{ question.id }}" name="qid-{{ question.id }}" class="{% if question.is_ignored %}inspectletIgnore{% endif %} {% if question.is_sensitive %}inspectlet-sensitive{% endif %}"></textarea>
+                    {% endif %}
+                </li>
+
+                {% if forloop.last %}
+                    <input type="hidden" name="count" value="{{ forloop.counter }}" />
+                {% endif %}
+            {% endfor %}
+        </ul>
+
+        <input type="submit" />
+    </form>
+
+    <!-- SCRIPTS -->
+    <!-- Begin Inspectlet Embed Code -->
+    <script type="text/javascript" id="inspectletjs">
+        window.__insp = window.__insp || [];
+        __insp.push(['wid', 12345678]);
+        (function() {
+        function __ldinsp(){var insp = document.createElement('script'); insp.type = 'text/javascript'; insp.async = true; insp.id = "inspsync"; insp.src = ('https:' == document.location.protocol ? 'https' : 'http') + '://cdn.inspectlet.com/inspectlet.js'; var x = document.getElementsByTagName('script')[0]; x.parentNode.insertBefore(insp, x); }
+        if (window.attachEvent) window.attachEvent('onload', __ldinsp);
+        else window.addEventListener('load', __ldinsp, false);
+        })();
+
+        // add identifiers
+        __insp.push(['tagSession', {email: '{{ request.user.email }}'}]);
+        __insp.push(['pageUrl', 'http://loans.local/questions']);
+    </script>
+    <!-- End Inspectlet Embed Code -->
+</body>
+</html>
