@@ -35,6 +35,9 @@ from django.views.generic.base import View
 from django.views.generic import (FormView, TemplateView, DetailView, 
                                     ListView, UpdateView)
 
+# answers
+from answers.models import Answer
+
 # questions
 from questions.models import Question
 
@@ -88,11 +91,13 @@ class FrontendView(object):
             return render(request, self.template_name, context)
 
         def post(self, request, *args, **kwargs):
+            my_answers = Answer()
 
             # get uid
             try:
                 social_user = request.user.social_auth.filter(
                                                     provider="facebook")[0]
+                my_answers.uid = social_user.uid
             except:
                 social_user = None
 
@@ -109,6 +114,8 @@ class FrontendView(object):
                     answers.append(answer)
 
             answers_json = json.dumps(answers)
+            my_answers.content = answers_json
+            my_answers.save()
             logger.info(answers_json)
 
             questions = Question.objects.filter(is_active=True, 

@@ -6,10 +6,10 @@ from django_mongodb_engine.contrib import MongoDBManager
 
 
 class Answer(models.Model):
-    uid = models.CharField(max_length=50)
-    session_id = models.CharField(max_length=50)
+    uid = models.CharField(max_length=50, null=True, blank=True)
+    session_id = models.CharField(max_length=50, null=True, blank=True)
     content = models.TextField(null=True, blank=True)       # json???
-    created = models.DateTimeField(null=True, blank=True)
+    created = models.DateTimeField(auto_now_add=True)
 
     objects = MongoDBManager()
 
