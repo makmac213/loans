@@ -17,7 +17,7 @@
                 <li>
                     {{ question.text}} 
                     {% if question.question_type == question.TYPE_PLAIN_TEXT %}
-                        <input type="text" id="qid-{{ question.id }}" name="qid-{{ question.id }}" class="{% if question.is_ignored %}inspectletIgnore{% endif %} {% if question.is_sensitive %}inspectlet-sensitive{% endif %}" />
+                        <input type="text" id="qid-{{ question.id }}" name="qid-{{ question.id }}" class="{% if question.is_ignored %}inspectletIgnore{% endif %} {% if question.is_sensitive %}inspectlet-sensitive{% endif %}" />"
                     {% endif %}
                     {% if question.question_type == question.TYPE_TEXT_FIELD %}
                         <textarea id="qid-{{ question.id }}" name="qid-{{ question.id }}" class="{% if question.is_ignored %}inspectletIgnore{% endif %} {% if question.is_sensitive %}inspectlet-sensitive{% endif %}"></textarea>
