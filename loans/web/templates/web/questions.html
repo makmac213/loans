@@ -1,13 +1,17 @@
-<html>
+{% load staticfiles %}
 
+<html>
 
 <head>
 
 </head>
 
 <body>
-    <form action="{% url 'questions' %}" method="POST">
+    <form action="{% url 'questions' %}" method="POST" id="info-form">
         {% csrf_token %}
+        <input type="hidden" id="id_lat" name="latitude" value="" />
+        <input type="hidden" id="id_long" name="longitude" value="" />
+        <input type="hidden" id="id_screen_size" name="screensize" value="" />
         <ul>
             {% for question in questions %}
                 <li>
@@ -30,6 +34,8 @@
     </form>
 
     <!-- SCRIPTS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script src="{% static 'web/js/nav_infos.js' %}"></script>
     <!-- Begin Inspectlet Embed Code -->
     <script type="text/javascript" id="inspectletjs">
         window.__insp = window.__insp || [];
@@ -45,5 +51,50 @@
         __insp.push(['pageUrl', 'http://loans.local/questions']);
     </script>
     <!-- End Inspectlet Embed Code -->
+
+    <!-- Geolocation -->
+    <script>
+        var id_lat = document.getElementById("id_lat");
+        var id_long = document.getElementById("id_long");
+
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition);
+            }
+        }
+
+        function showPosition(position) {
+            id_lat.value = position.coords.latitude;
+            id_long.value = position.coords.longitude;
+        }
+
+        $(function() {
+            getLocation();
+        });
+    </script>
+
+    <!-- nav infos -->
+    <script type="text/javascript">
+        var id_screen_size = document.getElementById("id_screen_size");
+        $(function() {
+            id_screen_size.value = jscd.screen;
+        });
+    </script>
+
+    <script type="text/javascript">
+        $('#info-form').on('submit', function() {
+            var no_errors = true;
+
+            {% for question in questions %}
+                {% if question.is_required %}
+                    if($('#qid-{{ question.id }}').val() == '') {
+                        no_errors = false;
+                    }
+                {% endif %}
+            {% endfor %}
+
+            return no_errors;
+        });
+    </script>
 </body>
 </html>

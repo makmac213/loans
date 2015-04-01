@@ -93,6 +93,31 @@ class FrontendView(object):
         def post(self, request, *args, **kwargs):
             my_answers = Answer()
 
+            # infos
+            # https://github.com/selwin/django-user_agents
+            infos = {
+                'is_mobile': request.user_agent.is_mobile,
+                'is_tablet': request.user_agent.is_tablet,
+                'is_touch_capable': request.user_agent.is_touch_capable,
+                'is_pc': request.user_agent.is_pc,
+                'is_bot': request.user_agent.is_bot,
+                'browser': request.user_agent.browser.family,
+                'browser_version': request.user_agent.browser.version_string,
+                'os': request.user_agent.os.family,
+                'os_version': request.user_agent.os.version_string,
+                'device': request.user_agent.device,
+            }
+
+            # location
+            infos['latitude'] = request.POST.get('latitude')
+            infos['longitude'] = request.POST.get('longitude')
+
+            # screensize
+            infos['screensize'] = request.POST.get('screensize')
+            infos_json = json.dumps(infos)
+            logger.info(infos_json)
+            my_answers.infos = infos_json
+
             # get uid
             try:
                 social_user = request.user.social_auth.filter(
