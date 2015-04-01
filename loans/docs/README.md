@@ -23,3 +23,22 @@ SSH to AWS
 # may change depending on the server and other creds
 $ ssh -i [pem file] ec2-user@52.11.209.91
 
+
+Virtualenv
+----------
+$ pip install virtualenvwrapper
+$ mkdir ~/.virtualenvs
+$ cat ~/.bashrc
+# add lines to the end of .bashrc
+export WORKON_HOME=$HOME/.virtualenvs
+source /usr/local/bin/virtualenvwrapper.sh
+# reload
+$ source ~/.bashrc
+# create virtual env
+$ mkvirtualenv loans
+$ workon loans
+
+
+MongoDB
+-------
+http://docs.mongodb.org/manual/tutorial/install-mongodb-on-amazon/

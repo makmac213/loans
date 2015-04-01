@@ -19,4 +19,8 @@ urlpatterns = patterns('',
             FacebookView.NewAssociation.as_view(), name="fb_new_association"),
     url(r'^logged-in/#_=_$', 
             FacebookView.NewAssociation.as_view(), name="fb_new_association"),
+    url(r'^new-users-redirect-url/$', 
+            FacebookView.NewAssociation.as_view(), name="fb_new_association"),
+    url(r'^new-users-redirect-url/#_=_$', 
+            FacebookView.NewAssociation.as_view(), name="fb_new_association"),
 )
