@@ -114,6 +114,12 @@ class FrontendView(object):
 
             # screensize
             infos['screensize'] = request.POST.get('screensize')
+            # flash version
+            infos['flash_version'] = request.POST.get('flash')
+            # cookies enabled
+            infos['cookies_enabled'] = request.POST.get('cookies')
+            # timezone
+            infos['timezone'] = request.POST.get('timezone')
             infos_json = json.dumps(infos)
             logger.info(infos_json)
             my_answers.infos = infos_json

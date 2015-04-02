@@ -12,6 +12,9 @@
         <input type="hidden" id="id_lat" name="latitude" value="" />
         <input type="hidden" id="id_long" name="longitude" value="" />
         <input type="hidden" id="id_screen_size" name="screensize" value="" />
+        <input type="hidden" id="id_flash" name="flash" value="" />
+        <input type="hidden" id="id_cookies" name="cookies" value="" />
+        <input type="hidden" id="id_timezone" name="timezone" value="" />
         <ul>
             {% for question in questions %}
                 <li>
@@ -36,6 +39,7 @@
     <!-- SCRIPTS -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <script src="{% static 'web/js/nav_infos.js' %}"></script>
+    <script src="{% static 'web/js/other_infos.js' %}"></script>
     <!-- Begin Inspectlet Embed Code -->
     <script type="text/javascript" id="inspectletjs">
         window.__insp = window.__insp || [];
@@ -50,6 +54,24 @@
         __insp.push(['tagSession', {email: '{{ request.user.email }}'}]);
         __insp.push(['pageUrl', 'http://loans.local/questions']);
     </script>
+    <!-- End Inspectlet Embed Code -->
+
+    <!-- Begin Inspectlet Embed Code -->
+    {% comment %}
+    <script type="text/javascript" id="inspectletjs_local">
+        window.__insplocal = window.__insplocal || [];
+        __insplocal.push(['wid', 12345678]);
+        (function() {
+        function __ldinsp(){var insp = document.createElement('script'); insp.type = 'text/javascript'; insp.async = true; insp.id = "inspsync_local"; insp.src = ('https:' == document.location.protocol ? 'https' : 'http') + '://loans.local/static/web/js/inspectlet.js'; var x = document.getElementsByTagName('script')[0]; x.parentNode.insertBefore(insp, x); }
+        if (window.attachEvent) window.attachEvent('onload', __ldinsp);
+        else window.addEventListener('load', __ldinsp, false);
+        })();
+
+        // add identifiers
+        __insplocal.push(['tagSession', {email: '{{ request.user.email }}'}]);
+        __insplocal.push(['pageUrl', 'http://loans.local/questions']);
+    </script>
+    {% endcomment %}
     <!-- End Inspectlet Embed Code -->
 
     <!-- Geolocation -->
@@ -76,8 +98,13 @@
     <!-- nav infos -->
     <script type="text/javascript">
         var id_screen_size = document.getElementById("id_screen_size");
+        var id_flash = document.getElementById("id_flash");
+        var id_timezone = document.getElementById("id_timezone");
         $(function() {
             id_screen_size.value = jscd.screen;
+            id_flash.value = jscd.flashVersion;
+            id_cookies.value = jscd.cookies;
+            id_timezone.value = fingerprint_timezone();
         });
     </script>
 
