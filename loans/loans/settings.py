@@ -144,10 +144,13 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
     'answers',
-    'common',
+    'common',    
     'profiles',
     'questions',
     'web',
+
+    # mifos
+    'mifos',
 
     #
     'social.apps.django_app.default',
