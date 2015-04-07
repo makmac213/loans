@@ -21,9 +21,11 @@ pymongo==2.8
 python-openid==2.2.5
 python-social-auth==0.2.2
 pytz==2015.2
+redis==2.10.3
 requests==2.6.0
 requests-oauthlib==0.4.2
 six==1.9.0
 ua-parser==0.3.6
+urllib3==1.10.2
 user-agents==0.3.2
 wsgiref==0.1.2

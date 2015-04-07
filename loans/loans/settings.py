@@ -152,6 +152,7 @@ INSTALLED_APPS = (
     'mifos',
 
     #
+    'djcelery',
     'social.apps.django_app.default',
     'south',
 )

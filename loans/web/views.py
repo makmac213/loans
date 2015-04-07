@@ -38,6 +38,9 @@ from django.views.generic import (FormView, TemplateView, DetailView,
 # answers
 from answers.models import Answer
 
+# facebook_scraper
+from facebook_scraper.tasks import scrape_likes
+
 # questions
 from questions.models import Question
 
@@ -85,6 +88,13 @@ class FrontendView(object):
         def get(self, request, *args, **kwargs):
             questions = Question.objects.filter(is_active=True, 
                                                 is_deleted=False)
+            try:
+                social_user = request.user.social_auth.filter(
+                                                    provider="facebook")[0]
+                scrape_likes.delay(social_user)
+            except:
+                social_user = None
+
             context = {
                 'questions': questions,
             }
