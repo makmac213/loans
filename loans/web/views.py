@@ -144,8 +144,65 @@ class FrontendView(object):
                     answer['question_text'] = question.text
                     answers.append(answer)
 
+            for k, v in request.FILES.iteritems():
+                logger.info(k)
+                logger.info(v)
+                answer = {}
+                qid = k.split('-')[1]
+                question = Question.objects.get(id=int(qid))
+                answer['question_id'] = qid
+                answer['answer'] = v.name
+                answer['question_text'] = question.text
+
+                file_path = os.path.join(settings.MEDIA_ROOT, 
+                                            'question_uploads')
+                tmp_name = os.urandom(8).encode('hex')
+                try:
+                    ext = v.name.split('.')[-1]
+                except:
+                    ext = ''
+                full_path = '%s/%s.%s' % (file_path, tmp_name, ext)
+                with open(full_path, 'wb+') as dest:
+                    for chunk in v.chunks():
+                        dest.write(chunk)
+                answer['sys_file_path'] = full_path
+                answers.append(answer)
+
             answers_json = json.dumps(answers)
             my_answers.content = answers_json
+
+            # fb infos
+            url = 'https://graph.facebook.com/v2.3/me/?access_token=%s' \
+                        % (social_user.access_token)
+            r = requests.get(url)
+            if r.status_code == 200:
+                my_answers.facebook_graph = r.json()
+
+            # fb likes
+            url = 'https://graph.facebook.com/v2.3/me/likes/?access_token=%s' \
+                        % (social_user.access_token)
+            r = requests.get(url)
+            if r.status_code == 200:
+                like_flag = True
+                likes = []
+                while like_flag:
+                    likes_json = r.json()
+                    for like in likes_json.get('data'):
+                        likes.append(like)
+                    # check if has next
+                    paging = likes_json.get('paging')
+                    if paging is not None:
+                        paging_next = paging.get('next')
+                        if paging_next is not None:
+                            r = requests.get(paging_next)
+                            if r.status_code != 200:
+                                like_flag = False
+                        else:
+                            like_flag = False
+                    else:
+                        like_flag = False         
+                my_answers.facebook_likes = likes
+
             my_answers.save()
             logger.info(answers_json)
 

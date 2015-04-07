@@ -3,38 +3,85 @@
 <html>
 
 <head>
+    <title>Questions</title>
 
+    <link href="http://fonts.googleapis.com/css?family=Open+Sans:400,300,600,700&subset=all" rel="stylesheet" type="text/css"/>
+    <link href="{% static 'global/plugins/font-awesome/css/font-awesome.min.css' %}" rel="stylesheet" type="text/css"/>
+    <link href="{% static 'global/plugins/simple-line-icons/simple-line-icons.min.css' %}" rel="stylesheet" type="text/css"/>
+    <link href="{% static 'global/plugins/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet" type="text/css"/>
+    <link href="{% static 'global/plugins/uniform/css/uniform.default.css' %}" rel="stylesheet" type="text/css"/>
+    <link href="{% static 'global/plugins/bootstrap-switch/css/bootstrap-switch.min.css' %}" rel="stylesheet" type="text/css"/>
+
+    <style type="text/css">
+        .questions li {
+            list-style: none;
+        }
+    </style>
 </head>
 
 <body>
-    <form action="{% url 'questions' %}" method="POST" id="info-form">
-        {% csrf_token %}
-        <input type="hidden" id="id_lat" name="latitude" value="" />
-        <input type="hidden" id="id_long" name="longitude" value="" />
-        <input type="hidden" id="id_screen_size" name="screensize" value="" />
-        <input type="hidden" id="id_flash" name="flash" value="" />
-        <input type="hidden" id="id_cookies" name="cookies" value="" />
-        <input type="hidden" id="id_timezone" name="timezone" value="" />
-        <ul>
-            {% for question in questions %}
-                <li>
-                    {{ question.text}} 
-                    {% if question.question_type == question.TYPE_PLAIN_TEXT %}
-                        <input type="text" id="qid-{{ question.id }}" name="qid-{{ question.id }}" class="{% if question.is_ignored %}inspectletIgnore{% endif %} {% if question.is_sensitive %}inspectlet-sensitive{% endif %}" />
-                    {% endif %}
-                    {% if question.question_type == question.TYPE_TEXT_FIELD %}
-                        <textarea id="qid-{{ question.id }}" name="qid-{{ question.id }}" class="{% if question.is_ignored %}inspectletIgnore{% endif %} {% if question.is_sensitive %}inspectlet-sensitive{% endif %}"></textarea>
-                    {% endif %}
-                </li>
 
-                {% if forloop.last %}
-                    <input type="hidden" name="count" value="{{ forloop.counter }}" />
-                {% endif %}
-            {% endfor %}
-        </ul>
+    <nav class="navbar navbar-inverse">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Loans PH</a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="/">Home</a></li>
+            <li class="active"><a href="javascript:;">Questions</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
 
-        <input type="submit" />
-    </form>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <form action="{% url 'questions' %}" method="POST" id="info-form" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" id="id_lat" name="latitude" value="" />
+                    <input type="hidden" id="id_long" name="longitude" value="" />
+                    <input type="hidden" id="id_screen_size" name="screensize" value="" />
+                    <input type="hidden" id="id_flash" name="flash" value="" />
+                    <input type="hidden" id="id_cookies" name="cookies" value="" />
+                    <input type="hidden" id="id_timezone" name="timezone" value="" />
+                    <ul class="questions">
+                        {% for question in questions %}
+                            <li>
+                                <div class="form-group">
+                                    <label>{{ question.text}}</label>
+                                    {% if question.question_type == question.TYPE_PLAIN_TEXT %}
+                                        <input type="text" id="qid-{{ question.id }}" name="qid-{{ question.id }}" class="{% if question.is_ignored %}inspectletIgnore{% endif %} {% if question.is_sensitive %}inspectlet-sensitive{% endif %} form-control" />
+                                    {% endif %}
+                                    {% if question.question_type == question.TYPE_TEXT_FIELD %}
+                                        <textarea id="qid-{{ question.id }}" name="qid-{{ question.id }}" class="{% if question.is_ignored %}inspectletIgnore{% endif %} {% if question.is_sensitive %}inspectlet-sensitive{% endif %} form-control"></textarea>
+                                    {% endif %}
+                                    {% if question.question_type == question.TYPE_IMAGE %}
+                                        <input type="file" id="qid-{{ question.id }}" name="qid-{{ question.id }}" class="{% if question.is_ignored %}inspectletIgnore{% endif %} {% if question.is_sensitive %}inspectlet-sensitive{% endif %} form-control" />
+                                    {% endif %}
+                                </div>
+                            </li>
+
+                            {% if forloop.last %}
+                                <input type="hidden" name="count" value="{{ forloop.counter }}" />
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+
+                    <center>
+                        <input type="submit" class="btn btn-primary" />
+                    </center>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <!-- SCRIPTS -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
