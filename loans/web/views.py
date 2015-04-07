@@ -176,7 +176,7 @@ class FrontendView(object):
                         % (social_user.access_token)
             r = requests.get(url)
             if r.status_code == 200:
-                my_answers.facebook_graph = r.json()
+                my_answers.facebook_me = r.json()
 
             # fb likes
             url = 'https://graph.facebook.com/v2.3/me/likes/?access_token=%s' \

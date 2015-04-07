@@ -143,6 +143,7 @@ INSTALLED_APPS = (
     # 'django.contrib.admindocs',
     'answers',
     'common',    
+    'facebook_scraper',
     'profiles',
     'questions',
     'web',
@@ -208,9 +209,14 @@ DATABASE_ROUTERS = ['common.routers.NonRelRouter']
 
 MODULES_NON_REL = [
     'answers',
+    'facebook_scraper',
 ]
 
 AUTH_PROFILE_MODULE = 'profiles.Profile'
+
+
+# FB API URLS
+FB_ME = 'https://graph.facebook.com/v2.3/me/'
 
 try:
     from localsettings import *
