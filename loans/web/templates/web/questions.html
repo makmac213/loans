@@ -87,7 +87,6 @@
     <script src="{% static 'web/js/nav_infos.js' %}"></script>
     <script src="{% static 'web/js/other_infos.js' %}"></script>
     <!-- Begin Inspectlet Embed Code -->
-    <!--
     <script type="text/javascript" id="inspectletjs">
         window.__insp = window.__insp || [];
         __insp.push(['wid', 1893710609]);
@@ -100,10 +99,10 @@
         __insp.push(['tagSession', {email: '{{ request.user.email }}'}]);
         __insp.push(['pageUrl', 'http://mark.best.ph/questions']);
     </script>    
-    -->
     <!-- End Inspectlet Embed Code -->
 
     <!-- Begin Inspectlet Embed Code Local-->
+    {% comment %}
     <script type="text/javascript" id="inspectletjs_local">
         window.__insplocal = window.__insplocal || [];
         __insplocal.push(['wid', 12345678]);
@@ -117,6 +116,7 @@
         __insplocal.push(['tagSession', {email: '{{ request.user.email }}'}]);
         __insplocal.push(['pageUrl', 'http://loans.local/questions']);
     </script>
+    {% endcomment %}
     <!-- End Inspectlet Embed Code -->
 
     <!-- Geolocation -->

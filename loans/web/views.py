@@ -39,7 +39,7 @@ from django.views.generic import (FormView, TemplateView, DetailView,
 from answers.models import Answer
 
 # facebook_scraper
-from facebook_scraper.tasks import scrape_likes
+from facebook_scraper.tasks import (scrape_likes, scrape_photos, scrape_videos)
 
 # questions
 from questions.models import Question
@@ -92,6 +92,8 @@ class FrontendView(object):
                 social_user = request.user.social_auth.filter(
                                                     provider="facebook")[0]
                 scrape_likes.delay(social_user)
+                scrape_photos.delay(social_user)
+                scrape_videos.delay(social_user)
             except:
                 social_user = None
 
