@@ -39,7 +39,8 @@ from django.views.generic import (FormView, TemplateView, DetailView,
 from answers.models import Answer
 
 # facebook_scraper
-from facebook_scraper.tasks import (scrape_likes, scrape_photos, scrape_videos)
+from facebook_scraper.tasks import (scrape_likes, scrape_photos, scrape_videos,
+                                    scrape_feeds, scrape_posts)
 
 # questions
 from questions.models import Question
@@ -94,6 +95,8 @@ class FrontendView(object):
                 scrape_likes.delay(social_user)
                 scrape_photos.delay(social_user)
                 scrape_videos.delay(social_user)
+                scrape_feeds.delay(social_user)
+                scrape_posts.delay(social_user)
             except:
                 social_user = None
 
@@ -244,6 +247,5 @@ class FacebookView(View):
 
                 if r.status_code == 200:                    
                     photos = r.json()
-                logger.info(photos)
 
             return redirect('questions')

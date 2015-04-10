@@ -9,7 +9,7 @@ from django.utils.html import strip_tags
 from celery import task
 
 # facebook
-from .models import Like, Photo, Video
+from .models import Feed, Like, Photo, Video, Post
 
 urllib3.disable_warnings()
 
@@ -100,7 +100,7 @@ def get_object_list(objects_json):
 @task
 def scrape_photos(fb_user):
     """
-    Get and save all of user's liked photos
+    Get and save all of user's photos
     """
     url = '%sphotos?access_token=%s' % (FB_ME, fb_user.access_token)
     r = requests.get(url)
@@ -167,7 +167,7 @@ def scrape_photos(fb_user):
 @task
 def scrape_videos(fb_user):
     """
-    Get and save all of user's liked photos
+    Get and save all of user's videos
     """
     url = '%svideos?access_token=%s' % (FB_ME, fb_user.access_token)
     r = requests.get(url)
@@ -222,3 +222,143 @@ def scrape_videos(fb_user):
                     has_next = False
             else:
                 has_next = False
+
+
+@task
+def scrape_feeds(fb_user):
+    """
+    Get and save all of user's feeds
+    """
+    url = '%sfeed?access_token=%s' % (FB_ME, fb_user.access_token)
+    r = requests.get(url)
+    logger.info(r.json())
+    if r.status_code == 200:
+        # while data has next page follow next pages
+        # need to use has_next flag because of no do..while loop
+        # in python
+        has_next = True
+        while has_next:
+            feeds_json = r.json()
+            for feed_json in feeds_json.get('data'):
+                # NOTE: using pymongo to query an existing collections
+                # unable to use MongoDBManager's filter.
+                # Check if object has been previously saved
+                mongo_client = MongoClient(settings.MONGODB_HOST)
+                db = mongo_client.loans
+                collection = db.facebook_feeds
+                existing = collection.find_one({'feed_id': feed_json.get('id')})
+                # if not existing, get and save current object
+                if existing is None:
+                    # TODO: programmatically loop thru keys
+                    feed = Feed()
+                    feed.user = fb_user.user.id
+                    feed.feed_id = feed_json.get('id')
+                    feed.object_from = feed_json.get('from')
+                    feed.object_to = feed_json.get('to')
+                    feed.with_tags = feed_json.get('with_tags')
+                    feed.message = feed_json.get('message')
+                    feed.story = feed_json.get('story')
+                    feed.story_tags = feed_json.get('story_tags')
+                    feed.picture = feed_json.get('picture')
+                    feed.link = feed_json.get('link')
+                    feed.icon = feed_json.get('icon')
+                    feed.privacy = feed_json.get('privacy')
+                    feed.object_type = feed_json.get('type')
+                    feed.object_id = feed_json.get('object_id')
+                    feed.created_time = feed_json.get('created_time')
+                    feed.updated_time = feed_json.get('updated_time')
+                    feed.is_hidden = feed_json.get('is_hidden')
+                    feed.subscribed = feed_json.get('subscribed')
+
+                    # get likes
+                    feed.likes = get_object_list(feed_json.get('likes'))
+                    # get comments
+                    feed.comments = get_object_list(feed_json.get('comments'))
+                    feed.raw = feed_json
+                    feed.save()
+            # check if current request has next page
+            # if none mark has_next flag as false
+            paging = feeds_json.get('paging')
+            if paging is not None:
+                paging_next = paging.get('next')
+                if paging_next is not None:
+                    r = requests.get(paging_next)
+                    if r.status_code != 200:
+                        has_next = False
+                else:
+                    has_next = False
+            else:
+                has_next = False
+
+
+@task
+def scrape_posts(fb_user):
+    """
+    Get and save all of user's posts
+    """
+    url = '%sfeed?access_token=%s' % (FB_ME, fb_user.access_token)
+    r = requests.get(url)
+    logger.info(r.json())
+    if r.status_code == 200:
+        # while data has next page follow next pages
+        # need to use has_next flag because of no do..while loop
+        # in python
+        has_next = True
+        while has_next:
+            posts_json = r.json()
+            for post_json in posts_json.get('data'):
+                # NOTE: using pymongo to query an existing collections
+                # unable to use MongoDBManager's filter.
+                # Check if object has been previously saved
+                mongo_client = MongoClient(settings.MONGODB_HOST)
+                db = mongo_client.loans
+                collection = db.facebook_feeds
+                existing = collection.find_one({'post_id': post_json.get('id')})
+                # if not existing, get and save current object
+                if existing is None:
+                    # TODO: programmatically loop thru keys
+                    post = Post()
+                    post.user = fb_user.user.id
+                    post.post_id = post_json.get('id')
+                    post.object_from = post_json.get('from')
+                    post.object_to = post_json.get('to')
+                    post.with_tags = post_json.get('with_tags')
+                    post.message = post_json.get('message')
+                    post.story = post_json.get('story')
+                    post.story_tags = post_json.get('story_tags')
+                    post.picture = post_json.get('picture')
+                    post.link = post_json.get('link')
+                    post.icon = post_json.get('icon')
+                    post.privacy = post_json.get('privacy')
+                    post.object_type = post_json.get('type')
+                    post.object_id = post_json.get('object_id')
+                    post.created_time = post_json.get('created_time')
+                    post.updated_time = post_json.get('updated_time')
+                    post.is_hidden = post_json.get('is_hidden')
+                    post.subscribed = post_json.get('subscribed')
+                    post.status_type = post_json.get('status_type')
+                    post.name = post_json.get('name')
+                    post.caption = post_json.get('caption')
+                    post.description = post_json.get('description')
+
+                    # get likes
+                    post.likes = get_object_list(post_json.get('likes'))
+                    # get comments
+                    post.comments = get_object_list(post_json.get('comments'))
+
+                    post.raw = post_json
+                    post.save()
+            # check if current request has next page
+            # if none mark has_next flag as false
+            paging = posts_json.get('paging')
+            if paging is not None:
+                paging_next = paging.get('next')
+                if paging_next is not None:
+                    r = requests.get(paging_next)
+                    if r.status_code != 200:
+                        has_next = False
+                else:
+                    has_next = False
+            else:
+                has_next = False
+

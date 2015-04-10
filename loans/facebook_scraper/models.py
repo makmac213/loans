@@ -87,3 +87,71 @@ class Video(models.Model):
 
     def save(self, *args, **kwargs):
         super(Video, self).save(using=settings.DB_NONREL)
+
+
+class Feed(models.Model):
+    user = models.IntegerField(null=True, blank=True)
+    feed_id = models.CharField(max_length=255, null=True, blank=True)
+    object_from = models.TextField(null=True, blank=True)
+    object_to = models.TextField(null=True, blank=True)
+    with_tags = models.TextField(null=True, blank=True)
+    message = models.TextField(null=True, blank=True)
+    story = models.TextField(null=True, blank=True)
+    story_tags = models.TextField(null=True, blank=True)
+    picture = models.URLField(null=True, blank=True)
+    link = models.URLField(null=True, blank=True)
+    icon = models.TextField(null=True, blank=True)
+    privacy = models.TextField(null=True, blank=True)
+    object_type = models.CharField(max_length=100, null=True, blank=True)
+    object_id = models.CharField(max_length=255, null=True, blank=True)
+    created_time = models.CharField(max_length=255, null=True, blank=True)
+    updated_time = models.CharField(max_length=40, null=True, blank=True)
+    is_hidden = models.CharField(max_length=20, null=True, blank=True)
+    subscribed = models.CharField(max_length=20, null=True, blank=True)
+    likes = models.TextField(null=True, blank=True)
+    comments = models.TextField(null=True, blank=True)
+
+    raw = models.TextField(null=True, blank=True)
+
+    objects = MongoDBManager()
+
+    class Meta:
+        db_table = 'facebook_feeds'
+
+    def save(self, *args, **kwargs):
+        super(Feed, self).save(using=settings.DB_NONREL)
+
+
+class Post(models.Model):
+    user = models.IntegerField(null=True, blank=True)
+    post_id = models.CharField(max_length=255, null=True, blank=True)
+    object_from = models.TextField(null=True, blank=True)
+    object_to = models.TextField(null=True, blank=True)
+    with_tags = models.TextField(null=True, blank=True)
+    message = models.TextField(null=True, blank=True)
+    story = models.TextField(null=True, blank=True)
+    story_tags = models.TextField(null=True, blank=True)
+    picture = models.URLField(null=True, blank=True)
+    link = models.URLField(null=True, blank=True)
+    icon = models.TextField(null=True, blank=True)
+    privacy = models.TextField(null=True, blank=True)
+    object_type = models.CharField(max_length=100, null=True, blank=True)
+    object_id = models.CharField(max_length=255, null=True, blank=True)
+    created_time = models.CharField(max_length=255, null=True, blank=True)
+    updated_time = models.CharField(max_length=40, null=True, blank=True)
+    is_hidden = models.CharField(max_length=20, null=True, blank=True)
+    subscribed = models.CharField(max_length=20, null=True, blank=True)
+    likes = models.TextField(null=True, blank=True)
+    comments = models.TextField(null=True, blank=True)
+    status_type = models.CharField(max_length=50, null=True, blank=True)
+    name = models.TextField(null=True, blank=True)
+    caption = models.TextField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+
+    objects = MongoDBManager()
+    
+    class Meta:
+        db_table = 'facebook_posts'
+
+    def save(self, *args, **kwargs):
+        super(Post, self).save(using=settings.DB_NONREL)
