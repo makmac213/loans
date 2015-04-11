@@ -1,0 +1,14 @@
+doctype html
+html
+  head
+    title= title
+    link(rel='stylesheet', href='/stylesheets/style.css')
+  body
+    header
+      div.logo
+        | #{logoTitle}
+    h1.signin_with_google
+      a(href="/auth/google")
+        img(src="/images/google.png")
+    footer
+      | &nbsp;
