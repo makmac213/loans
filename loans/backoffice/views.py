@@ -133,7 +133,7 @@ class UserView(object):
                     context['profile_pic'] = profile_pic['data']['url']
             # significant other
             significant_other = user.profile.significant_other
-            if significant is not None:
+            if significant_other is not None:
                 significant_other = significant_other.replace('{u', '{')
                 significant_other = significant_other.replace(", u'", ", '")
                 significant_other = significant_other.replace(": u'", ": '")
