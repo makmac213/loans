@@ -4,7 +4,7 @@
     <div class="container">
 		<ul>
 			{% for collection in collections %}
-				{% if not forloop.first %}
+				{% if 'facebook' in collection %}
 				<li>
 					<a href="{% url 'manage_collection' collection %}">{{ collection }}</a>
 				</li>
