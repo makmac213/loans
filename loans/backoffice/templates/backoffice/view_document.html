@@ -1,0 +1,26 @@
+{% extends 'backoffice/base.html' %}
+{% load staticfiles i18n %}
+
+{% block header_scripts %}
+<style type="text/css">
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+    	<div class="row">
+    		<div class="col-md-12">
+    			<pre><code>{{ data }}</code></pre>
+    		</div>
+    	</div>
+
+    	<div class="row">
+    		<div class="col-md-12">
+		    	<a href="{% url 'manage_collection' collection %}" class="btn btn-primary">
+		    		{% trans "Back" %}
+		    	</a>
+    		</div>
+    	</div>	
+
+    </div>
+{% endblock %}

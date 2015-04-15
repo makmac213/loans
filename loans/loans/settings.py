@@ -142,6 +142,7 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
     'answers',
+    'backoffice',
     'common',    
     'facebook_scraper',
     'profiles',
@@ -218,6 +219,7 @@ AUTH_PROFILE_MODULE = 'profiles.Profile'
 
 # FB API URLS
 FB_ME = 'https://graph.facebook.com/v2.3/me/'
+FB_GRAPH_URL = 'https://graph.facebook.com/v2.3/'
 
 try:
     from localsettings import *

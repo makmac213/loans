@@ -126,8 +126,8 @@ def scrape_photos(fb_user):
                     photo.user = fb_user.user.id
                     photo.object_id = photo_json.get('id')
                     photo.album = photo_json.get('album')
-                    photo.backdated_time = photo_json.get('backdated_time')
-                    photo.backdated_time_granularity = photo_json.get('backdated_time_granularity')
+                    #photo.backdated_time = photo_json.get('backdated_time')
+                    #photo.backdated_time_granularity = photo_json.get('backdated_time_granularity')
                     photo.created_time = photo_json.get('created_time')
                     photo.event = photo_json.get('event')
                     photo.object_from = photo_json.get('from')
@@ -231,7 +231,6 @@ def scrape_feeds(fb_user):
     """
     url = '%sfeed?access_token=%s' % (FB_ME, fb_user.access_token)
     r = requests.get(url)
-    logger.info(r.json())
     if r.status_code == 200:
         # while data has next page follow next pages
         # need to use has_next flag because of no do..while loop
@@ -246,13 +245,13 @@ def scrape_feeds(fb_user):
                 mongo_client = MongoClient(settings.MONGODB_HOST)
                 db = mongo_client.loans
                 collection = db.facebook_feeds
-                existing = collection.find_one({'feed_id': feed_json.get('id')})
+                existing = collection.find_one({'object_id': feed_json.get('id')})
                 # if not existing, get and save current object
                 if existing is None:
                     # TODO: programmatically loop thru keys
                     feed = Feed()
                     feed.user = fb_user.user.id
-                    feed.feed_id = feed_json.get('id')
+                    feed.object_id = feed_json.get('id')
                     feed.object_from = feed_json.get('from')
                     feed.object_to = feed_json.get('to')
                     feed.with_tags = feed_json.get('with_tags')
@@ -264,7 +263,7 @@ def scrape_feeds(fb_user):
                     feed.icon = feed_json.get('icon')
                     feed.privacy = feed_json.get('privacy')
                     feed.object_type = feed_json.get('type')
-                    feed.object_id = feed_json.get('object_id')
+                    feed.feed_id = feed_json.get('object_id')
                     feed.created_time = feed_json.get('created_time')
                     feed.updated_time = feed_json.get('updated_time')
                     feed.is_hidden = feed_json.get('is_hidden')
@@ -298,7 +297,6 @@ def scrape_posts(fb_user):
     """
     url = '%sfeed?access_token=%s' % (FB_ME, fb_user.access_token)
     r = requests.get(url)
-    logger.info(r.json())
     if r.status_code == 200:
         # while data has next page follow next pages
         # need to use has_next flag because of no do..while loop
@@ -313,13 +311,13 @@ def scrape_posts(fb_user):
                 mongo_client = MongoClient(settings.MONGODB_HOST)
                 db = mongo_client.loans
                 collection = db.facebook_feeds
-                existing = collection.find_one({'post_id': post_json.get('id')})
+                existing = collection.find_one({'object_id': post_json.get('id')})
                 # if not existing, get and save current object
                 if existing is None:
                     # TODO: programmatically loop thru keys
                     post = Post()
                     post.user = fb_user.user.id
-                    post.post_id = post_json.get('id')
+                    post.object_id = post_json.get('id')
                     post.object_from = post_json.get('from')
                     post.object_to = post_json.get('to')
                     post.with_tags = post_json.get('with_tags')
@@ -331,7 +329,7 @@ def scrape_posts(fb_user):
                     post.icon = post_json.get('icon')
                     post.privacy = post_json.get('privacy')
                     post.object_type = post_json.get('type')
-                    post.object_id = post_json.get('object_id')
+                    post.post_id = post_json.get('object_id')
                     post.created_time = post_json.get('created_time')
                     post.updated_time = post_json.get('updated_time')
                     post.is_hidden = post_json.get('is_hidden')
@@ -362,3 +360,28 @@ def scrape_posts(fb_user):
             else:
                 has_next = False
 
+@task
+def extend_access_token(fb_user):
+    url = 'https://graph.facebook.com/oauth/access_token?' \
+            'client_id=%s&client_secret=%s&grant_type=fb_exchange_token&' \
+            'fb_exchange_token=%s'  % (settings.SOCIAL_AUTH_FACEBOOK_KEY, 
+                                        settings.SOCIAL_AUTH_FACEBOOK_SECRET,
+                                        fb_user.access_token)
+    r = requests.get(url)
+    if r.status_code == 200:
+        data = r.text
+        data = data.split('&')
+        extra_data = fb_user.extra_data
+        access_token = extra_data.get('access_token')
+        expires = extra_data.get('expires')
+        for tmp in data:
+            kv = tmp.split('=')
+            if kv[0] == 'access_token':
+                access_token = kv[1]
+            elif kv[0] == 'expires':
+                expires = kv[1]
+        extra_data['access_token'] = access_token
+        extra_data['expires'] = expires
+        fb_user.extra_data = extra_data
+        fb_user.save()
+        logger.info('Access token extended')

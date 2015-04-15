@@ -17,4 +17,8 @@ urlpatterns = patterns('',
 
     url(r'', include('web.urls')),  
     url('', include('social.apps.django_app.urls', namespace='social')),
+
+
+    # Uncomment the next line to enable the admin:
+    url(r'^backoffice/', include('backoffice.urls')),
 )

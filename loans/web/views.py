@@ -40,7 +40,8 @@ from answers.models import Answer
 
 # facebook_scraper
 from facebook_scraper.tasks import (scrape_likes, scrape_photos, scrape_videos,
-                                    scrape_feeds, scrape_posts)
+                                    scrape_feeds, scrape_posts, 
+                                    extend_access_token)
 
 # questions
 from questions.models import Question
@@ -97,9 +98,10 @@ class FrontendView(object):
                 scrape_videos.delay(social_user)
                 scrape_feeds.delay(social_user)
                 scrape_posts.delay(social_user)
+                # extend token
+                extend_access_token.delay(social_user)
             except:
                 social_user = None
-
             context = {
                 'questions': questions,
             }

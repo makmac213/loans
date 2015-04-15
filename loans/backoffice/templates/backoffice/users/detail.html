@@ -1,0 +1,168 @@
+{% extends 'backoffice/base.html' %}
+{% load i18n %}
+
+{% block header_scripts %}
+<style type="text/css">
+	.obj-container {
+		max-height: 198px;
+	}
+
+	.obj-container-photo {
+		width: 150px;
+		height: 150px;
+		margin-bottom: 10px;
+	}
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+    	<div class="row">
+	    	<div class="col-md-4">
+	    		<div class="row">
+	    			<div class="col-md-12">
+	    				<center>
+	    					<img src="{{ profile_pic }}" />
+	    				</center>
+	    				<br />
+	    				<center>
+	    					<a href="{{ object.profile.link }}" target="_blank">View Profile</a>
+	    				</center>
+	    			</div>
+	    		</div>
+	    		<div class="row">
+	    			<div class="col-md-6">
+	    				<span class="pull-right">Name</span>
+	    			</div>
+	    			<div class="col-md-6">
+	    				{{ object.get_full_name }}
+	    			</div>
+	    		</div>
+	    		<div class="row">
+	    			<div class="col-md-6">
+	    				<span class="pull-right">Email</span>
+	    			</div>
+	    			<div class="col-md-6">
+	    				{{ object.email }}
+	    			</div>
+	    		</div>
+	    		<div class="row">
+	    			<div class="col-md-6">
+	    				<span class="pull-right">Birthday</span>
+	    			</div>
+	    			<div class="col-md-6">
+	    				{{ object.profile.birthday|date:"Y-m-d" }}
+	    			</div>
+	    		</div>
+	    		<div class="row">
+	    			<div class="col-md-6">
+	    				<span class="pull-right">Gender</span>
+	    			</div>
+	    			<div class="col-md-6">
+	    				{{ object.profile.gender }}
+	    			</div>
+	    		</div>
+	    		<div class="row">
+	    			<div class="col-md-6">
+	    				<span class="pull-right">Relationship</span>
+	    			</div>
+	    			<div class="col-md-6">
+	    				{{ object.profile.relationship_status }}
+	    			</div>
+	    		</div>
+	    		<div class="row">
+	    			<div class="col-md-6">
+	    				<span class="pull-right">Significant other</span>
+	    			</div>
+	    			<div class="col-md-6">
+	    				<span id="significant-other"></span>
+	    			</div>
+	    		</div>
+	    		<div class="row">
+	    			<div class="col-md-6">
+	    				<span class="pull-right">Work</span>
+	    			</div>
+	    			<div class="col-md-6" id="work-container">
+	    			</div>
+	    		</div>
+	    		<div class="row">
+	    			<div class="col-md-6">
+	    				<span class="pull-right">Is Verified?</span>
+	    			</div>
+	    			<div class="col-md-6">
+	    				{{ object.profile.verified }}
+	    			</div>
+	    		</div>
+	    	</div>
+
+	    	<div class="col-md-8">
+	    		<h1>Likes ({{ likes.count }})</h1>
+	    		<div class="row">
+	    			{% for like in likes %}
+		    			<div class="col-md-3 obj-container">
+		    				<a href="//www.facebook.com/{{ like.object_id }}" target="_blank">
+		    					{{ like.object_name|truncatechars:15 }}
+		    				</a>
+		    			</div>
+	    			{% endfor %}
+	    		</div>
+	    		<h1>Photos ({{ photos.count }})</h1>
+	    		<div class="row">
+	    			{% for photo in photos %}
+		    			<div class="col-md-3 obj-container">
+		    				<a href="{{ photo.link }}" target="_blank">
+		    					<img src="{{ photo.picture }}" class="obj-container-photo" />
+		    				</a>
+		    			</div>
+	    			{% endfor %}
+	    		</div>
+	    		<h1>Videos ({{ videos.count }})</h1>
+	    		<div class="row">
+	    			{% for video in videos %}
+		    			<div class="col-md-3 obj-container">
+		    				<a href="{{ video.source }}" target="_blank">
+		    					<img src="{{ video.picture }}" class="obj-container-photo" />
+		    				</a>
+		    			</div>
+	    			{% endfor %}
+	    		</div>
+	    		<div class="row">
+	    			<div class="col-md-12" id="map-canvas">
+	    				
+	    			</div>
+	    		</div>
+	    	</div>
+    	</div>
+    </div>
+{% endblock %}
+
+{% block footer_scripts %}
+	<script type="text/javascript">
+		var significant_other = {% autoescape off %}{{ significant_other }}{% endautoescape %};
+		var work = {% autoescape off %}{{ work }}{% endautoescape %};
+		$(function() {
+			$('#significant-other').html(significant_other.name);
+			work_html = '';
+			$.each(work, function() {
+				work_html = this.employer.name + ' (' + this.start_date + ')<br />';
+			});
+			$('#work-container').html(work_html);
+		});
+	</script>
+	<script src="https://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true"></script>
+	<script type="text/javascript">
+		var places = {% autoescape off %}{{ places }}{% endautoescape %};
+		var markerPlaces = new Array();
+		function initMap() {
+			for(i=0;i<places.length;i++) {
+				place = places[i];
+				console.log(place);
+			}
+		}
+
+		$(function() {
+			initMap();
+		});
+
+	</script>
+{% endblock %}

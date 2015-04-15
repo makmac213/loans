@@ -27,8 +27,8 @@ class Photo(models.Model):
     user = models.IntegerField(null=True, blank=True)
     object_id = models.CharField(max_length=255, null=True, blank=True)
     album = models.CharField(max_length=40, null=True, blank=True)
-    backdated_time = models.DateTimeField(null=True, blank=True)
-    backdated_time_granularity = models.DateTimeField(null=True, blank=True)
+    #backdated_time = models.DateTimeField(null=True, blank=True)
+    #backdated_time_granularity = models.DateTimeField(null=True, blank=True)
     created_time = models.DateTimeField(null=True, blank=True)
     event = models.CharField(max_length=40, null=True, blank=True)
     object_from = models.TextField(null=True, blank=True)
@@ -41,7 +41,7 @@ class Photo(models.Model):
     place = models.TextField(null=True, blank=True)
     source = models.URLField(null=True, blank=True)
     updated_time = models.DateTimeField(null=True, blank=True)
-    width = models.IntegerField(null=True, blank=True)
+    width = models.TextField(null=True, blank=True)
     # tags has paging need to scrape all
     tags = models.TextField(null=True, blank=True)
     # likes has paging need to scrape all
