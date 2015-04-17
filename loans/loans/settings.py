@@ -145,6 +145,7 @@ INSTALLED_APPS = (
     'backoffice',
     'common',    
     'facebook_scraper',
+    'graph',
     'profiles',
     'questions',
     'web',

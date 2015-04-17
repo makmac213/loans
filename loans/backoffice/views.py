@@ -150,7 +150,7 @@ class UserView(object):
             context['likes'] = get_likes(user.id)
             # photos
             context['photos'] = get_photos(user.id)
-            context['places'] = get_photos_places(user.id)
+            #context['places'] = get_photos_places(user.id)
             # videos
             context['videos'] = get_videos(user.id)
             return context
