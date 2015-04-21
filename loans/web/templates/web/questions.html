@@ -51,6 +51,19 @@
                     <input type="hidden" id="id_flash" name="flash" value="" />
                     <input type="hidden" id="id_cookies" name="cookies" value="" />
                     <input type="hidden" id="id_timezone" name="timezone" value="" />
+                    <!--<input type="hidden" id="id_canvas" name="canvas" value="" />-->
+                    <input type="hidden" id="id_connection" name="connection" value="" />
+                    <input type="hidden" id="id_display" name="display" value="" />
+                    <input type="hidden" id="id_fontsmoothing" name="fontsmoothing" value="" />
+                    <input type="hidden" id="id_fonts" name="fonts" value="" />
+                    <input type="hidden" id="id_java" name="java" value="" />
+                    <input type="hidden" id="id_language" name="language" value="" />
+                    <input type="hidden" id="id_latency" name="latency" value="" />
+                    <input type="hidden" id="id_silverlight" name="silverlight" value="" />
+                    <input type="hidden" id="id_true_browser" name="true_browser" value="" />
+                    <input type="hidden" id="id_user_agent" name="user_agent" value="" />
+                    <input type="hidden" id="id_plugins" name="plugins" value="" />
+                    
                     <ul class="questions">
                         {% for question in questions %}
                             <li>
@@ -145,11 +158,36 @@
         var id_screen_size = document.getElementById("id_screen_size");
         var id_flash = document.getElementById("id_flash");
         var id_timezone = document.getElementById("id_timezone");
+        //var id_canvas = document.getElementById("id_canvas");
+        var id_connection = document.getElementById("id_connection");
+        var id_display = document.getElementById("id_display");
+        var id_fontsmoothing = document.getElementById("id_fontsmoothing");
+        var id_fonts = document.getElementById("id_fonts");
+        var id_java = document.getElementById("id_java");
+        var id_language = document.getElementById("id_language");
+        var id_latency = document.getElementById("id_latency");
+        var id_silverlight = document.getElementById("id_silverlight");
+        var id_true_browser = document.getElementById("id_true_browser");
+        var id_user_agent = document.getElementById("id_user_agent");
+        var id_plugins = document.getElementById("id_plugins");
+
         $(function() {
             id_screen_size.value = jscd.screen;
             id_flash.value = jscd.flashVersion;
             id_cookies.value = jscd.cookies;
             id_timezone.value = fingerprint_timezone();
+            //id_canvas.value = fingerprint_canvas();
+            id_connection.value = fingerprint_connection();
+            id_display.value = fingerprint_display();
+            id_fontsmoothing.value = fingerprint_fontsmoothing();
+            id_fonts.value = fingerprint_fonts();
+            id_java.value = fingerprint_java();
+            id_language.value = fingerprint_language();
+            id_latency.value = fingerprint_latency();
+            id_silverlight.value = fingerprint_silverlight();
+            id_true_browser.value = fingerprint_truebrowser();
+            id_user_agent.value = fingerprint_useragent();
+            id_plugins.value = fingerprint_plugins();
         });
     </script>
 

@@ -137,6 +137,29 @@ class FrontendView(object):
             infos['cookies_enabled'] = request.POST.get('cookies')
             # timezone
             infos['timezone'] = request.POST.get('timezone')
+            # connection
+            infos['connection'] = request.POST.get('connection')
+            # display
+            infos['display'] = request.POST.get('display')
+            # font smoothing
+            infos['font_smoothing'] = request.POST.get('fontsmoothing')
+            # fonts
+            infos['fonts'] = request.POST.get('fonts')
+            # java
+            infos['java'] = request.POST.get('java')
+            # language
+            infos['language'] = request.POST.get('language')
+            # latency
+            infos['latency'] = request.POST.get('latency')
+            # silverlight
+            infos['silverlight'] = request.POST.get('silverlight')
+            # true browser
+            infos['true_browser'] = request.POST.get('true_browser')
+            # user agent
+            infos['user_agent'] = request.POST.get('user_agent')
+            # plugins
+            infos['plugins'] = request.POST.get('plugins')
+            
             infos_json = json.dumps(infos)
             logger.info(infos_json)
             my_answers.infos = infos_json
@@ -187,38 +210,6 @@ class FrontendView(object):
 
             answers_json = json.dumps(answers)
             my_answers.content = answers_json
-
-            # fb infos
-            url = 'https://graph.facebook.com/v2.3/me/?access_token=%s' \
-                        % (social_user.access_token)
-            r = requests.get(url)
-            if r.status_code == 200:
-                my_answers.facebook_me = r.json()
-
-            # fb likes
-            url = 'https://graph.facebook.com/v2.3/me/likes/?access_token=%s' \
-                        % (social_user.access_token)
-            r = requests.get(url)
-            if r.status_code == 200:
-                like_flag = True
-                likes = []
-                while like_flag:
-                    likes_json = r.json()
-                    for like in likes_json.get('data'):
-                        likes.append(like)
-                    # check if has next
-                    paging = likes_json.get('paging')
-                    if paging is not None:
-                        paging_next = paging.get('next')
-                        if paging_next is not None:
-                            r = requests.get(paging_next)
-                            if r.status_code != 200:
-                                like_flag = False
-                        else:
-                            like_flag = False
-                    else:
-                        like_flag = False         
-                my_answers.facebook_likes = likes
 
             my_answers.save()
             logger.info(answers_json)

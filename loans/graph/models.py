@@ -7,7 +7,8 @@ class Graph(models.Model):
     dest_uid = models.CharField(max_length=50)
     obj_type = models.CharField(max_length=30)
     api_type = models.CharField(max_length=30)
-    #created_time = models.DateTimeField(null=True, blank=True)
+    created_time = models.DateTimeField(null=True, 
+                                        blank=True)
 
     class Meta:
         db_table = 'graphs_graphs'

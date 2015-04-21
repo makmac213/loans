@@ -11,8 +11,8 @@ class Answer(models.Model):
     content = models.TextField(null=True, blank=True)
     infos = models.TextField(null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
-    facebook_me = models.TextField(null=True, blank=True)
-    facebook_likes = models.TextField(null=True, blank=True)
+    #facebook_me = models.TextField(null=True, blank=True)
+    #facebook_likes = models.TextField(null=True, blank=True)
 
     objects = MongoDBManager()
 
