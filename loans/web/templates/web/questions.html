@@ -206,5 +206,22 @@
             return no_errors;
         });
     </script>
+
+    <script type="text/javascript">
+        function checkGraphTask() {
+            $.ajax({
+                url: '{% url "check_graph_task" %}',
+                type: 'post',
+                success: function(resp) {
+                    console.log(resp);
+                }
+            });            
+        }
+
+
+        $(function() {
+            setInterval(checkGraphTask, 1000);
+        });
+    </script>
 </body>
 </html>

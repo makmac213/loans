@@ -282,3 +282,46 @@ def get_graph_videos(fb_user):
                             graph.save()
         except Exception, e:
             print e
+
+
+def get_graph_inbox(fb_user):
+    mongo_client = MongoClient(settings.MONGODB_HOST)
+    db = mongo_client.loans
+    collection = db.facebook_inboxes
+    inboxes = collection.find({'user':fb_user.user.id})
+
+    api_type = 'inbox'
+
+    for inbox in inboxes:
+        try:
+            comments = inbox.get('comments')
+            comments = normalize_json(comments)
+            comments = json.loads(comments)
+
+            profiles = inbox.get('object_to')
+            profiles = normalize_json(profiles)
+            profiles = json.loads(profiles)
+            users =  profiles.get('data')
+
+            for comment in comments:
+                query = Q(obj_id=comment.get('id'))
+                existing_comment = Graph.objects.filter(query).count()
+                if not existing_comment:
+                    graph = Graph()
+                    graph.obj_id = comment.get('id')
+                    # get sender
+                    src_uid = comment.get('from')
+                    if src_uid is not None:
+                        src_uid = src_uid.get('id')
+                    graph.src_uid = src_uid
+                    # get receiver
+                    for user in users:
+                        if user.get('id') != src_uid:
+                            graph.dest_uid = user.get('id')
+                    graph.obj_type = 'conversation'
+                    graph.api_type = 'inbox'
+                    graph.created_time = comment.get('created_time')
+                    graph.save()
+        except Exception, e:
+            # TODO: do a better json handler
+            print e

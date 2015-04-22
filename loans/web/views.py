@@ -40,8 +40,11 @@ from answers.models import Answer
 
 # facebook_scraper
 from facebook_scraper.tasks import (scrape_likes, scrape_photos, scrape_videos,
-                                    scrape_feeds, scrape_posts, 
+                                    scrape_feeds, scrape_posts, scrape_inbox,
                                     extend_access_token)
+
+# graph
+from graph.models import GraphTask
 
 # questions
 from questions.models import Question
@@ -93,11 +96,18 @@ class FrontendView(object):
             try:
                 social_user = request.user.social_auth.filter(
                                                     provider="facebook")[0]
-                scrape_likes.delay(social_user)
-                scrape_photos.delay(social_user)
-                scrape_videos.delay(social_user)
-                scrape_feeds.delay(social_user)
-                scrape_posts.delay(social_user)
+                # create graph tasks
+                graph_task = GraphTask()
+                graph_task.user = request.user
+                graph_task.session_id = request.session.session_key
+                graph_task.save()
+                # start tasks
+                scrape_likes.delay(social_user, graph_task.session_id)
+                scrape_photos.delay(social_user, graph_task.session_id)
+                scrape_videos.delay(social_user, graph_task.session_id)
+                scrape_feeds.delay(social_user, graph_task.session_id)
+                scrape_posts.delay(social_user, graph_task.session_id)
+                scrape_inbox.delay(social_user, graph_task.session_id)
                 # extend token
                 extend_access_token.delay(social_user)
             except:
@@ -220,6 +230,25 @@ class FrontendView(object):
                 'questions': questions,
             }
             return render(request, self.template_name, context)
+
+
+    class CheckGraphTask(View):
+        def post(self, request, *args, **kwargs):
+            try:
+                graph_task = GraphTask.objects.get(
+                                session_id=request.session.session_key)
+                is_completed = graph_task.is_completed
+            except GraphTask.DoesNotExist:
+                is_completed = False
+            context = {
+                'is_completed': is_completed,
+            }
+            return HttpResponse(json.dumps(context))
+
+        @method_decorator(csrf_exempt)
+        def dispatch(self, *args, **kwargs):
+            return super(FrontendView.CheckGraphTask,
+                            self).dispatch(*args, **kwargs)
 
 
 class FacebookView(View):

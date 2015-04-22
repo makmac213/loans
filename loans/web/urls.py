@@ -8,7 +8,10 @@ urlpatterns = patterns('',
     url(r'^$', FrontendView.Landing.as_view(), name="landing"),
     # questions page
     url(r'^questions/$', FrontendView.Questions.as_view(), name="questions"),
-
+    # ajax check graph task
+    url(r'^check-graph-task/$', 
+            FrontendView.CheckGraphTask.as_view(),
+            name="check_graph_task"),
 
     # Facebook
     url(r'^new-association-redirect-url/$', 

@@ -8,8 +8,11 @@ from django.utils.html import strip_tags
 # djcelery
 from celery import task
 
+# graph
+from graph.models import GraphTask
+
 # facebook
-from .models import Feed, Like, Photo, Video, Post
+from .models import Feed, Like, Photo, Video, Post, Inbox
 
 urllib3.disable_warnings()
 
@@ -18,7 +21,7 @@ logger = logging.getLogger(__name__)
 FB_ME = settings.FB_ME
 
 @task
-def scrape_likes(fb_user):
+def scrape_likes(fb_user, session_id):
     """
     Get and save all of user's liked items
     """
@@ -63,6 +66,14 @@ def scrape_likes(fb_user):
                     has_next = False
             else:
                 has_next = False
+    # task completed flag graph task
+    try:
+        graph_task = GraphTask.objects.get(user=fb_user.user, 
+                                        session_id=session_id)
+        graph_task.task_likes = True 
+        graph_task.save()   
+    except GraphTask.DoesNotExist, e:
+        print e
 
 
 def get_object_list(objects_json):
@@ -98,7 +109,57 @@ def get_object_list(objects_json):
 
 
 @task
-def scrape_photos(fb_user):
+def scrape_inbox(fb_user, session_id):
+    """
+    Get all conversations
+    """
+    url = '%sinbox?access_token=%s' % (FB_ME, fb_user.access_token)
+    r = requests.get(url)
+    if r.status_code == 200:
+        has_next = True
+        while has_next:
+            conversations = r.json()
+            for conversation in conversations.get('data'):
+                mongo_client = MongoClient(settings.MONGODB_HOST)
+                db = mongo_client.loans
+                collection = db.facebook_inboxes
+                existing = collection.find_one({'object_id': conversation.get('id')})
+                if existing is None:
+                    inbox = Inbox()
+                    inbox.user = fb_user.user.id
+                    inbox.object_id = conversation.get('id')
+                    # get comments
+                    inbox.comments = get_object_list(conversation.get('comments'))
+                    inbox.object_to = conversation.get('to')
+                    inbox.unread = conversation.get('unread')
+                    inbox.unseen = conversation.get('unseen')
+                    inbox.updated_time = conversation.get('updated_time')
+                    inbox.save()
+            # check if current request has next page
+            # if none mark has_next flag as false
+            paging = conversations.get('paging')
+            if paging is not None:
+                paging_next = paging.get('next')
+                if paging_next is not None:
+                    r = requests.get(paging_next)
+                    if r.status_code != 200:
+                        has_next = False
+                else:
+                    has_next = False
+            else:
+                has_next = False
+    # task completed flag graph task
+    try:
+        graph_task = GraphTask.objects.get(user=fb_user.user, 
+                                        session_id=session_id)
+        graph_task.task_inbox = True 
+        graph_task.save()   
+    except GraphTask.DoesNotExist, e:
+        print e
+
+
+@task
+def scrape_photos(fb_user, session_id):
     """
     Get and save all of user's photos
     """
@@ -162,10 +223,18 @@ def scrape_photos(fb_user):
                     has_next = False
             else:
                 has_next = False
+    # task completed flag graph task
+    try:
+        graph_task = GraphTask.objects.get(user=fb_user.user, 
+                                        session_id=session_id)
+        graph_task.task_photos = True  
+        graph_task.save()  
+    except GraphTask.DoesNotExist, e:
+        print e
 
 
 @task
-def scrape_videos(fb_user):
+def scrape_videos(fb_user, session_id):
     """
     Get and save all of user's videos
     """
@@ -222,10 +291,18 @@ def scrape_videos(fb_user):
                     has_next = False
             else:
                 has_next = False
+    # task completed flag graph task
+    try:
+        graph_task = GraphTask.objects.get(user=fb_user.user, 
+                                        session_id=session_id)
+        graph_task.task_videos = True
+        graph_task.save()    
+    except GraphTask.DoesNotExist, e:
+        print e
 
 
 @task
-def scrape_feeds(fb_user):
+def scrape_feeds(fb_user, session_id):
     """
     Get and save all of user's feeds
     """
@@ -288,10 +365,18 @@ def scrape_feeds(fb_user):
                     has_next = False
             else:
                 has_next = False
+    # task completed flag graph task
+    try:
+        graph_task = GraphTask.objects.get(user=fb_user.user, 
+                                        session_id=session_id)
+        graph_task.task_feeds = True  
+        graph_task.save()  
+    except GraphTask.DoesNotExist, e:
+        print e
 
 
 @task
-def scrape_posts(fb_user):
+def scrape_posts(fb_user, session_id):
     """
     Get and save all of user's posts
     """
@@ -359,6 +444,15 @@ def scrape_posts(fb_user):
                     has_next = False
             else:
                 has_next = False
+    # task completed flag graph task
+    try:
+        graph_task = GraphTask.objects.get(user=fb_user.user, 
+                                        session_id=session_id)
+        graph_task.task_posts = True
+        graph_task.save()    
+    except GraphTask.DoesNotExist, e:
+        print e
+
 
 @task
 def extend_access_token(fb_user):
