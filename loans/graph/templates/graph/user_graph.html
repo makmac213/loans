@@ -54,7 +54,11 @@
 		    		</tr>
 		    		{% for message_sent in messages_sent %}
 		    			<tr>
-		    				<td>{{ message_sent.dest_uid }}</td>
+		    				<td>
+		    					<a href="http://facebook.com/{{ message_sent.dest_uid }}" target="_blank">
+		    						<img src="http://graph.facebook.com/{{ message_sent.dest_uid }}/picture?type=square" />
+		    					</a>
+		    				</td>
 		    				<td>{{ message_sent.dcount }}</td>
 		    			</tr>
 		    		{% endfor %}
@@ -71,7 +75,7 @@
 		    		</tr>
 		    		{% for message_received in messages_received %}
 		    			<tr>
-		    				<td>{{ message_received.src_uid }}</td>
+		    				<td><img src="http://graph.facebook.com/{{ message_received.src_uid }}/picture?type=square" /></td>
 		    				<td>{{ message_received.dcount }}</td>
 		    			</tr>
 		    		{% endfor %}

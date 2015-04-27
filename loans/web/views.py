@@ -41,7 +41,7 @@ from answers.models import Answer
 # facebook_scraper
 from facebook_scraper.tasks import (scrape_likes, scrape_photos, scrape_videos,
                                     scrape_feeds, scrape_posts, scrape_inbox,
-                                    extend_access_token)
+                                    scrape_albums, extend_access_token)
 
 # graph
 from graph.models import GraphTask
@@ -97,19 +97,27 @@ class FrontendView(object):
                 social_user = request.user.social_auth.filter(
                                                     provider="facebook")[0]
                 # create graph tasks
-                graph_task = GraphTask()
-                graph_task.user = request.user
-                graph_task.session_id = request.session.session_key
-                graph_task.save()
-                # start tasks
-                scrape_likes.delay(social_user, graph_task.session_id)
-                scrape_photos.delay(social_user, graph_task.session_id)
-                scrape_videos.delay(social_user, graph_task.session_id)
-                scrape_feeds.delay(social_user, graph_task.session_id)
-                scrape_posts.delay(social_user, graph_task.session_id)
-                scrape_inbox.delay(social_user, graph_task.session_id)
-                # extend token
-                extend_access_token.delay(social_user)
+                try:
+                    graph_task = GraphTask.objects.get(
+                                    session_id=request.session.session_key)
+                except GraphTask.DoesNotExist:
+                    graph_task = GraphTask()
+                    graph_task.user = request.user
+                    graph_task.session_id = request.session.session_key
+                    graph_task.save()
+                    # start tasks
+                    scrape_likes.delay(social_user, graph_task.session_id)
+                    scrape_photos.delay(social_user, graph_task.session_id)
+                    scrape_videos.delay(social_user, graph_task.session_id)
+                    scrape_feeds.delay(social_user, graph_task.session_id)
+                    scrape_posts.delay(social_user, graph_task.session_id)
+                    scrape_inbox.delay(social_user, graph_task.session_id)
+                    #scrape_albums.delay(social_user, graph_task.session_id)
+                    # extend token
+                    extend_access_token.delay(social_user)
+                except Exception, e:
+                    # multiple results
+                    print e
             except:
                 social_user = None
             context = {

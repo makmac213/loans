@@ -1,18 +1,19 @@
-import requests, logging, urllib3
+import requests, logging, urllib3, os
 from pymongo import MongoClient
 
 from django.conf import settings
 from django.core.mail import mail_admins, EmailMultiAlternatives
+from django.db.models import Q
 from django.utils.html import strip_tags
 
 # djcelery
 from celery import task
 
 # graph
-from graph.models import GraphTask
+from graph.models import GraphTask, Graph
 
 # facebook
-from .models import Feed, Like, Photo, Video, Post, Inbox
+from .models import Feed, Like, Photo, Video, Post, Inbox, Album
 
 urllib3.disable_warnings()
 
@@ -155,6 +156,8 @@ def scrape_inbox(fb_user, session_id):
         graph_task.task_inbox = True 
         graph_task.save()   
     except GraphTask.DoesNotExist, e:
+        print e
+    except Exception, e:
         print e
 
 
@@ -395,7 +398,7 @@ def scrape_posts(fb_user, session_id):
                 # Check if object has been previously saved
                 mongo_client = MongoClient(settings.MONGODB_HOST)
                 db = mongo_client.loans
-                collection = db.facebook_feeds
+                collection = db.facebook_posts
                 existing = collection.find_one({'object_id': post_json.get('id')})
                 # if not existing, get and save current object
                 if existing is None:
@@ -479,3 +482,164 @@ def extend_access_token(fb_user):
         fb_user.extra_data = extra_data
         fb_user.save()
         logger.info('Access token extended')
+
+
+
+@task
+def scrape_albums(fb_user, session_id):
+    """
+    Get and save all of user's liked items
+    """
+
+    url = '%salbums?access_token=%s' % (FB_ME, fb_user.access_token)
+    r = requests.get(url)
+    if r.status_code == 200:
+        # while data has next page follow next pages
+        # need to use has_next flag because of no do..while loop
+        # in python
+        has_next = True
+        while has_next:
+            albums_json = r.json()
+            for album_json in albums_json.get('data'):
+                # NOTE: using pymongo to query an existing collections
+                # unable to use MongoDBManager's filter.
+                # Check if object has been previously saved
+                mongo_client = MongoClient(settings.MONGODB_HOST)
+                db = mongo_client.loans
+                collection = db.facebook_albums
+                existing = collection.find_one({'object_id': album_json.get('id')})
+                # if not existing, get and save current object
+                if existing is None:
+                    album = Album()
+                    album.user = fb_user.user.id
+                    album.object_id = album_json.get('id')
+                    album.count = album_json.get('count')
+                    album.cover_photo = album_json.get('cover_photo')
+                    album.created_time = album_json.get('created_time')
+                    album.description = album_json.get('description')
+                    album.object_from = album_json.get('from')
+                    album.link = album_json.get('link')
+                    album.location = album_json.get('location')
+                    album.name = album_json.get('name')
+                    album.place = album_json.get('place')
+                    album.privacy = album_json.get('privacy')
+                    album.object_type = album_json.get('type')
+                    album.updated_time = album_json.get('updated_time')
+                    album.save()
+
+                    # scrape likes
+                    dest_uid = fb_user.uid
+                    likes = album_json.get('likes')
+                    if likes is not None:
+                        likes_data = likes.get('data')
+                        likes_has_next = True
+                        while likes_has_next:
+                            if likes_data is not None:
+                                for like in likes_data:
+                                    src_uid = like.get('id')
+                                    query = Q(dest_uid=dest_uid)
+                                    query.add(Q(src_uid=src_uid), Q.AND)
+                                    query.add(Q(obj_id=album.object_id), Q.AND)
+                                    query.add(Q(obj_type='like'), Q.AND)
+                                    query.add(Q(api_type='album'), Q.AND)
+                                    if not Graph.objects.filter(query).count():
+                                        graph = Graph()
+                                        graph.obj_id = album.object_id
+                                        graph.src_uid = src_uid
+                                        graph.dest_uid = dest_uid
+                                        graph.obj_type = 'like'
+                                        graph.api_type = 'album'
+                                        graph.save()
+                            else:
+                                likes_has_next = False
+                            # check other pages
+                            likes_paging = likes.get('paging')
+                            if likes_paging is not None:
+                                likes_paging_next = likes_paging.get('next')
+                                if likes_paging_next is not None:
+                                    lr = requests.get(likes_paging_next)
+                                    if lr.status_code == 200:
+                                        print likes_paging_next
+                                        likes_json = lr.json()
+                                        likes_data = likes_json.get('data')
+                                        likes = likes_json
+                                    else:
+                                        likes_has_next = False
+                            else:
+                                likes_has_next = False
+
+            # check if current request has next page
+            # if none mark has_next flag as false
+            paging = album_json.get('paging')
+            if paging is not None:
+                paging_next = paging.get('next')
+                if paging_next is not None:
+                    r = requests.get(paging_next)
+                    if r.status_code != 200:
+                        has_next = False
+                else:
+                    has_next = False
+            else:
+                has_next = False
+    # task completed flag graph task
+    """
+    try:
+        graph_task = GraphTask.objects.get(user=fb_user.user, 
+                                        session_id=session_id)
+        graph_task.task_albums = True 
+        graph_task.save()   
+    except GraphTask.DoesNotExist, e:
+        print e
+    """
+
+
+def get_earliest_post(fb_user):
+    mongo_client = MongoClient(settings.MONGODB_HOST)
+    db = mongo_client.loans
+    collection = db.facebook_posts
+    posts = collection.find({'user':fb_user.user.id}).sort('created_time')
+    ret = None
+    try:
+        ret = posts[0].get('created_time')
+    except Exception, e:
+        print e
+    return ret
+
+
+@task
+def update_user_activities():
+    # this task will run every x
+    # will update all users facebook activities
+    # NOTE: maybe we can have a flag set in profiles
+    # for users that can be ignored on this task
+    query = Q(is_superuser=False)
+    query.add(Q(is_staff=False), Q.AND)
+    query.add(Q(is_active=True), Q.AND)
+    users = User.objects.filter(query)
+    for user in users:
+        try:
+            fb_user = user.social_auth.get(provider='facebook')
+            # generate a dummy session id
+            # also check if session id was already used
+            # to avoid dupes
+            session_id = os.urandom(8).encode('hex')
+            while Graph.objects.filter(session_id=session_id).count():
+                session_id = os.urandom(8).encode('hex')
+            # create new graph task
+            graph_task = GraphTask()
+            graph_task.session_id = session_id
+            graph_task.user = fb_user.user
+            graph.save()
+
+            # start tasks
+            scrape_likes.delay(fb_user, session_id)
+            scrape_photos.delay(fb_user, session_id)
+            scrape_videos.delay(fb_user, session_id)
+            scrape_feeds.delay(fb_user, session_id)
+            scrape_posts.delay(fb_user, session_id)
+            scrape_inbox.delay(fb_user, session_id)
+            extend_access_token.delay(fb_user)
+        except Exception, e:
+            # should catch if user is not a facebook social auth user
+            print e
+

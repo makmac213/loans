@@ -173,12 +173,59 @@ def get_graph_posts(fb_user):
             likes = json.loads(likes)
         except:
             likes = []
+        # to
+        # check if user was included in the post
+        try:
+            object_tos = post.get('object_to')
+            object_tos = normalize_json(object_tos)
+            object_tos = json.loads(object_tos)
+            object_tos = object_tos.get('data')
+        except:
+            object_tos = []
 
         try:
             src_uid = object_from.get('id')
             if fb_user.uid in src_uid:
-                pass
-                #graph.src_uid = fb_user.uid
+                # check if src tagged the user
+                for tag in tags:
+                    # check if object action already exist
+                    dest_uid = tag.get('id')
+                    query = Q(obj_id=obj_id)
+                    query.add(Q(src_uid=src_uid), Q.AND)
+                    query.add(Q(dest_uid=dest_uid), Q.AND)
+                    query.add(Q(obj_type='tag'), Q.AND)
+                    query.add(Q(api_type=api_type), Q.AND)
+                    existing_tag = Graph.objects.filter(query).count()
+                    if not existing_tag:
+                        graph = Graph()
+                        graph.obj_id = obj_id
+                        graph.src_uid = src_uid
+                        graph.dest_uid = dest_uid
+                        graph.obj_type = 'tag'
+                        graph.api_type = api_type
+                        graph.created_time = post.get('created_time')
+                        graph.save()
+                # check if user liked the post
+                for like in likes:
+                    # check if object action already exist
+                    # dest_uid is the person who liked a post
+                    # authored by src_id
+                    dest_uid = like.get('id')
+                    query = Q(obj_id=obj_id)
+                    query.add(Q(src_uid=dest_uid), Q.AND)
+                    query.add(Q(dest_uid=src_uid), Q.AND)
+                    query.add(Q(obj_type='like'), Q.AND)
+                    query.add(Q(api_type=api_type), Q.AND)
+                    existing_like = Graph.objects.filter(query).count()
+                    if not existing_like:
+                        graph = Graph()
+                        graph.obj_id = obj_id
+                        graph.src_uid = dest_uid
+                        graph.dest_uid = src_uid
+                        graph.obj_type = 'like'
+                        graph.api_type = api_type
+                        graph.created_time = post.get('created_time')
+                        graph.save()
             else:
                 # if action came from different uid
                 # check how the user was involve on
@@ -219,6 +266,25 @@ def get_graph_posts(fb_user):
                             graph.src_uid = fb_user.uid
                             graph.dest_uid = src_uid
                             graph.obj_type = 'like'
+                            graph.api_type = api_type
+                            graph.created_time = post.get('created_time')
+                            graph.save()
+                # check if user was included in the post
+                for object_to in object_tos:
+                    if fb_user.uid == object_to.get('id'):
+                        # check if object already exists
+                        query = Q(obj_id=obj_id)
+                        query.add(Q(src_uid=src_uid), Q.AND)
+                        query.add(Q(dest_uid=fb_user.uid), Q.AND)
+                        query.add(Q(obj_type='wall post'), Q.AND)
+                        query.add(Q(api_type=api_type), Q.AND)
+                        existing_mention = Graph.objects.filter(query).count()
+                        if not existing_mention:
+                            graph = Graph()
+                            graph.obj_id = obj_id
+                            graph.src_uid = src_uid
+                            graph.dest_uid = fb_user.uid
+                            graph.obj_type = 'wall post'
                             graph.api_type = api_type
                             graph.created_time = post.get('created_time')
                             graph.save()

@@ -54,24 +54,56 @@ class GraphView(object):
             # get social auth user
             social_user = request.user.social_auth.get(provider='facebook')
             # get inbox
-            query_inbox = Q(src_uid=social_user.uid)
+            query_outbox = Q(src_uid=social_user.uid)
+            query_outbox.add(Q(obj_type='conversation'), Q.AND)
+            query_outbox.add(Q(api_type='inbox'), Q.AND)
+            if date_range is not None and date_range != '':
+                query_outbox.add(Q(created_time__gte=start_date), Q.AND)
+                query_outbox.add(Q(created_time__lte=end_date), Q.AND)
+            # sent
+            messages_sent = Graph.objects.filter(query_outbox).values(
+                                'dest_uid').annotate(
+                                    dcount=Count('dest_uid')).order_by('-dcount')[:10]            
+            messages_sent_count = Graph.objects.filter(query_outbox).count()
+            # received
+            query_inbox = Q(dest_uid=social_user.uid)
+            query_inbox.add(Q(obj_type='conversation'), Q.AND)
+            query_inbox.add(Q(api_type='inbox'), Q.AND)
             if date_range is not None and date_range != '':
                 query_inbox.add(Q(created_time__gte=start_date), Q.AND)
                 query_inbox.add(Q(created_time__lte=end_date), Q.AND)
-            # sent
-            messages_sent = Graph.objects.filter(query_inbox).values(
-                                'dest_uid').annotate(
-                                    dcount=Count('dest_uid')).order_by('-dcount')[:10]
-            print messages_sent.query.__str__()
-            messages_sent_count = Graph.objects.filter(
-                                    src_uid=social_user.uid).count()
-            # received
             messages_received = Graph.objects.filter(query_inbox).values(
                                     'src_uid').annotate(
-                                        dcount=Count('src_uid')).order_by('-dcount')[:10]
-            print messages_received.query.__str__()
-            messages_received_count = Graph.objects.filter(
-                                    dest_uid=social_user.uid).count()
+                                        dcount=Count('src_uid')).order_by('-dcount')[:10]            
+            messages_received_count = Graph.objects.filter(query_inbox).count()
+            
+            # photos
+            # tags
+            query_photo_tags_others = Q(src_uid=social_user.uid)
+            query_photo_tags_others.add(Q(obj_type='tag'), Q.AND)
+            query_photo_tags_others.add(Q(api_type='photos'), Q.AND)
+            if date_range is not None and date_range != '':
+                query_photo_tags_others.add(Q(created_time__gte=start_date), Q.AND)
+                query_photo_tags_others.add(Q(created_time__lte=end_date), Q.AND)   
+            # sent
+            photo_tagged_others = Graph.objects.filter(query_photo_tags_others).values(
+                                'dest_uid').annotate(
+                                    dcount=Count('dest_uid')).order_by('-dcount')[:10]        
+            photo_tagged_others_count = Graph.objects.filter(query_photo_tags_others).count()
+            # tags received
+            query_photo_tags = Q(src_uid=social_user.uid)
+            query_photo_tags.add(Q(obj_type='tag'), Q.AND)
+            query_photo_tags.add(Q(api_type='photos'), Q.AND)
+            if date_range is not None and date_range != '':
+                query_photo_tags.add(Q(created_time__gte=start_date), Q.AND)
+                query_photo_tags.add(Q(created_time__lte=end_date), Q.AND)  
+            # sent
+            photo_tags = Graph.objects.filter(query_photo_tags).values(
+                                'dest_uid').annotate(
+                                    dcount=Count('dest_uid')).order_by('-dcount')[:10]        
+            photo_tags_count = Graph.objects.filter(query_photo_tags).count()
+
+
 
             context = {
                 'page_title': 'User Graph Activity',

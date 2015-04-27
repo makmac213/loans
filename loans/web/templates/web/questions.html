@@ -208,19 +208,21 @@
     </script>
 
     <script type="text/javascript">
+        var intCheck;
+
         function checkGraphTask() {
             $.ajax({
                 url: '{% url "check_graph_task" %}',
                 type: 'post',
                 success: function(resp) {
-                    console.log(resp);
+                    data = JSON.parse(resp);
                 }
             });            
         }
 
 
         $(function() {
-            setInterval(checkGraphTask, 1000);
+            intCheck = setInterval(checkGraphTask, 1000);
         });
     </script>
 </body>

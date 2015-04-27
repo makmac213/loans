@@ -172,3 +172,29 @@ class Inbox(models.Model):
 
     def save(self, *args, **kwargs):
         super(Inbox, self).save(using=settings.DB_NONREL)
+
+
+class Album(models.Model):
+    user = models.IntegerField(null=True, blank=True)
+    object_id = models.CharField(max_length=255, null=True, blank=True)
+    count = models.IntegerField(null=True, blank=True)
+    cover_photo = models.TextField(null=True, blank=True)
+    created_time = models.DateTimeField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    object_from = models.TextField(null=True, blank=True)
+    link = models.TextField(null=True, blank=True)
+    location = models.TextField(null=True, blank=True)
+    name = models.TextField(null=True, blank=True)
+    place = models.TextField(null=True, blank=True)
+    privacy = models.TextField(null=True, blank=True)
+    object_type = models.TextField(null=True, blank=True)
+    updated_time = models.DateTimeField(null=True, blank=True)
+
+    objects = MongoDBManager()
+    
+    class Meta:
+        db_table = 'facebook_albums'
+
+    def save(self, *args, **kwargs):
+        super(Album, self).save(using=settings.DB_NONREL)
+
