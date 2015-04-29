@@ -1,4 +1,4 @@
-{% load staticfiles %}
+{% load staticfiles i18n %}
 
 <html>
 
@@ -91,6 +91,8 @@
                         <input type="submit" class="btn btn-primary" />
                     </center>
                 </form>
+
+                <a href="{% url 'odesk_landing' %}" >{% trans "Link oDesk Profile" %}</a>
             </div>
         </div>
     </div>

@@ -1,4 +1,5 @@
 import json, time, os, string, requests, logging
+import odesk
 from datetime import datetime, timedelta
 from copy import deepcopy
 from decimal import Decimal
@@ -45,6 +46,9 @@ from facebook_scraper.tasks import (scrape_likes, scrape_photos, scrape_videos,
 
 # graph
 from graph.models import GraphTask
+
+# odesk scraper
+from odesk_scraper.models import OdeskProfile, Engagement
 
 # questions
 from questions.models import Question
@@ -279,3 +283,133 @@ class FacebookView(View):
                     photos = r.json()
 
             return redirect('questions')
+
+
+class OdeskView(View):
+
+    class LinkAccount(View):
+
+        def get(self, request, *args, **kwargs):
+            client = odesk.Client(settings.ODESK_API_KEY,
+                                    settings.ODESK_API_SECRET)
+            url = client.auth.get_authorize_url()
+            request.session['request_token'] = client.auth.request_token
+            request.session['request_token_secret'] = client.auth.request_token_secret
+            return redirect(url)
+
+
+    class Redirect(View):
+        def get(self, request, *args, **kwargs):
+            oauth_token = request.GET.get('oauth_token')
+            oauth_verifier = request.GET.get('oauth_verifier')
+            client = odesk.Client(settings.ODESK_API_KEY, 
+                                    settings.ODESK_API_SECRET)
+            client.auth.key = settings.ODESK_API_KEY
+            client.auth.secret = settings.ODESK_API_SECRET
+            client.auth.request_token = request.session.get('request_token')
+            client.auth.request_token_secret = request.session.get('request_token_secret')
+
+            token, secret = client.auth.get_access_token(oauth_verifier)
+            client = odesk.Client(settings.ODESK_API_KEY, 
+                                    settings.ODESK_API_SECRET,
+                                    oauth_access_token=token,
+                                    oauth_access_token_secret=secret)
+            info = client.hr.get_user_me()
+            auth_json = client.auth.get_info()
+            auth_info = auth_json.get('info')
+            capacity = auth_info.get('capacity')
+            location = auth_info.get('location')
+
+            engagements_json = client.hr.get_engagements()
+            engagements = engagements_json.get('engagement')
+
+            # update odesk profile
+            try:
+                profile = OdeskProfile.objects.get(user=request.user)
+            except OdeskProfile.DoesNotExist:
+                profile = OdeskProfile()
+            profile.user = request.user
+            profile.reference = info.get('reference')
+            profile.odesk_id = info.get('id')
+            profile.first_name = info.get('first_name')
+            profile.last_name = info.get('last_name')
+            profile.timezone = info.get('timezone')
+            profile.timezone_offset = info.get('timezone_offset')
+            profile.is_provider = info.get('is_provider')
+            profile.status = info.get('status')
+            # auth info
+            profile.portrait_50_img = auth_info.get('portrait_50_img')
+            profile.portrait_32_img = auth_info.get('portrait_32_img')
+            profile.portrait_100_img = auth_info.get('portrait_100_img')
+            profile.ref = auth_info.get('ref')
+            profile.has_agency = int(auth_info.get('has_agency', 0))
+            profile.company_url = auth_info.get('company_url')
+            profile.capacity_provider = capacity.get('provider')
+            profile.capacity_buyer = capacity.get('buyer')
+            profile.capacity_affiliate_manager = capacity.get('affiliate_manager') 
+            profile.city = location.get('city')
+            profile.state = location.get('state')
+            profile.country = location.get('country')
+            profile.profile_url = auth_info.get('profile_url')
+            profile.save()
+
+            # engagements
+            for engagement in engagements:
+                existing_query = Q(profile=profile)
+                existing_query.add(Q(reference=engagement.get('reference')), Q.AND)
+                if not Engagement.objects.filter(existing_query).count():
+                    eng = Engagement()
+                    eng.profile = profile
+                    eng.buyer_team_id = engagement.get('buyer_team__id')
+                    eng.buyer_team_reference = engagement.get('buyer_team__reference')
+                    eng.created_time = engagement.get('created_time')
+                    eng.description = engagement.get('description')
+                    eng.dev_recno_ciphertext = engagement.get('dev_recno_ciphertext')
+                    eng.engagement_end_date = engagement.get('engagement_end_date')
+                    eng.engagement_job_type = engagement.get('engagement_job_type')
+                    eng.engagement_start_date = engagement.get('engagement_start_date')
+                    eng.engagement_title = engagement.get('engagement_title')
+                    eng.hourly_charge_rate = engagement.get('hourly_charge_rate')
+                    eng.hourly_pay_rate = engagement.get('hourly_pay_rate')
+                    is_paused = engagement.get('is_paused', 0)
+                    if is_paused != '':
+                        eng.is_paused = int(is_paused)
+                    eng.is_trial_assignment = engagement.get('is_trial_assignment')
+                    eng.job_title = engagement.get('job__title')
+                    eng.job_ref_ciphertext = engagement.get('job_ref_ciphertext')
+                    eng.offer_reference = engagement.get('offer__reference')
+                    eng.portrait_url = engagement.get('portrait_url')
+                    eng.provider_id = engagement.get('provider__id')
+                    eng.provider_reference = engagement.get('provider__reference')
+                    eng.provider_team_id = engagement.get('provider_team__id')
+                    eng.provider_team_reference = engagement.get('provider_team__reference')
+                    eng.reference = engagement.get('reference')
+                    eng.status = engagement.get('status')
+                    eng.weekly_hours_limit = engagement.get('weekly_hours_limit')
+                    eng.weekly_salary_charge_amount = engagement.get('weekly_salary_charge_amount')
+                    eng.weekly_salary_pay_amount = engagement.get('weekly_salary_pay_amount')
+                    # get users total earnings per engagement                                        
+                    provider_ref = eng.provider_reference
+                    # get epoch date to datetime
+                    date_format = '%Y-%m-%d'
+                    start_date = float(eng.engagement_start_date) / 1000.0
+                    start_date = datetime.fromtimestamp(
+                                    start_date).strftime(date_format)
+                    end_date = float(eng.engagement_end_date) / 1000.0
+                    end_date = datetime.fromtimestamp(
+                                    end_date).strftime(date_format)
+                    # only get the total sum for the company based from the
+                    # date range, default to 0 if none was found
+                    query = "SELECT SUM(amount) WHERE date >= '%s' " \
+                            "AND date <= '%s' AND buyer_team__reference = %s" \
+                            % (start_date, end_date, eng.buyer_team_reference)
+                    earnings_json = client.finreport.get_provider_earnings(provider_ref, query)
+                    earnings_table = earnings_json.get('table')
+                    try:
+                        total_earnings = earnings_table['rows'][0]['c'][0]['v']
+                    except:
+                        total_earnings = 0
+                    eng.total_earnings = total_earnings
+                    eng.save()
+
+            return HttpResponse(json.dumps(earnings_json))

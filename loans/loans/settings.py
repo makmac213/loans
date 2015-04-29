@@ -146,6 +146,7 @@ INSTALLED_APPS = (
     'common',    
     'facebook_scraper',
     'graph',
+    'odesk_scraper',
     'profiles',
     'questions',
     'web',

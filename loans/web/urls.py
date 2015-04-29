@@ -1,7 +1,7 @@
 from django.conf.urls import patterns, include, url
 
 # web
-from .views import FrontendView, FacebookView
+from .views import FrontendView, FacebookView, OdeskView
 
 urlpatterns = patterns('',
     # landing page
@@ -26,4 +26,13 @@ urlpatterns = patterns('',
             FacebookView.NewAssociation.as_view(), name="fb_new_association"),
     url(r'^new-users-redirect-url/#_=_$', 
             FacebookView.NewAssociation.as_view(), name="fb_new_association"),
+
+    # odesk
+    url(r'^odesk/$', 
+            OdeskView.LinkAccount.as_view(), 
+            name="odesk_landing"),
+    url(r'^odesk/redirect/$', 
+            OdeskView.Redirect.as_view(), 
+            name="odesk_redirect"),
+
 )
