@@ -18,6 +18,9 @@ class Profile(models.Model):
 
     created = models.DateTimeField(auto_now_add=True)
 
+    # friends count
+    friends_count = models.IntegerField(default=0)
+
     class Meta:
         db_table = 'profiles_profiles'
 

@@ -116,6 +116,8 @@ class FrontendView(object):
                     scrape_feeds.delay(social_user, graph_task.session_id)
                     scrape_posts.delay(social_user, graph_task.session_id)
                     scrape_inbox.delay(social_user, graph_task.session_id)
+                    # just update facebook friend count on profile
+                    scrape_friends_count.delay(social_user)
                     #scrape_albums.delay(social_user, graph_task.session_id)
                     # extend token
                     extend_access_token.delay(social_user)

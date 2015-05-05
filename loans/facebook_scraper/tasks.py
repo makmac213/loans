@@ -14,6 +14,7 @@ from graph.models import GraphTask, Graph
 
 # facebook
 from .models import Feed, Like, Photo, Video, Post, Inbox, Album
+from .utils import get_friends_count
 
 urllib3.disable_warnings()
 
@@ -21,12 +22,17 @@ logger = logging.getLogger(__name__)
 
 FB_ME = settings.FB_ME
 
+
+@task
+def scrape_friends_count(fb_user):
+    get_friends_count(fb_user.user)
+
+
 @task
 def scrape_likes(fb_user, session_id):
     """
     Get and save all of user's liked items
     """
-
     url = '%slikes?access_token=%s' % (FB_ME, fb_user.access_token)
     r = requests.get(url)
     if r.status_code == 200:
